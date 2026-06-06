@@ -232,6 +232,33 @@ class DataService:
         df = self._query("SELECT DISTINCT year FROM dim_races ORDER BY year DESC")
         return df["year"].tolist()
 
+    # ─── Platform overview ────────────────────────────────
+    def get_overview(self) -> Dict:
+        """Aggregate counts + model metrics for the Overview dashboard."""
+        import json
+
+        counts = self._query("""
+            SELECT
+                (SELECT COUNT(*) FROM dim_races)               AS total_races,
+                (SELECT COUNT(*) FROM dim_drivers)             AS total_drivers,
+                (SELECT COUNT(*) FROM dim_circuits)            AS total_circuits,
+                (SELECT COUNT(*) FROM dim_constructors)        AS total_constructors,
+                (SELECT COUNT(DISTINCT year) FROM dim_races)   AS total_seasons,
+                (SELECT MIN(year) FROM dim_races)              AS first_year,
+                (SELECT MAX(year) FROM dim_races)              AS last_year,
+                (SELECT COUNT(*) FROM fact_race_results)       AS total_results
+        """)
+        stats = {k: int(v) for k, v in counts.iloc[0].to_dict().items()}
+
+        metrics_path = settings.ARTIFACTS_DIR / "metrics.json"
+        if metrics_path.exists():
+            with open(metrics_path) as fh:
+                stats["model_metrics"] = json.load(fh)
+        else:
+            stats["model_metrics"] = {}
+
+        return stats
+
 
 # Singleton instance
 data_service = DataService()

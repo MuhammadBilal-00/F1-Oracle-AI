@@ -7,6 +7,12 @@ from backend.services.data_service import data_service
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 
+@router.get("/overview")
+def platform_overview():
+    """Aggregate dataset counts and ML model metrics for the Overview page."""
+    return data_service.get_overview()
+
+
 @router.get("/circuits")
 def circuit_analytics():
     return data_service.get_circuits()

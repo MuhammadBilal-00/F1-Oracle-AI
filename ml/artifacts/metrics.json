@@ -1,0 +1,6 @@
+{
+  "race_winner": { "roc_auc": 0.9874, "best_model": "catboost", "models": { "xgboost": 0.9869, "lightgbm": 0.9848, "catboost": 0.9874 } },
+  "podium":      { "roc_auc": 0.9420, "best_model": "catboost", "models": { "xgboost": 0.9358, "lightgbm": 0.9338, "catboost": 0.9420 } },
+  "top10":       { "roc_auc": 0.9424, "best_model": "xgboost",  "models": { "xgboost": 0.9424, "lightgbm": 0.9386, "catboost": 0.9415 } },
+  "dnf":         { "roc_auc": 0.9573, "best_model": "catboost", "models": { "xgboost": 0.9498, "lightgbm": 0.9500, "catboost": 0.9573 } }
+}
