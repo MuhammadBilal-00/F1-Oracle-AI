@@ -77,6 +77,10 @@ A deeper write-up lives in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 | --- | --- |
 | ![Research Lab](linkedin-post/05-research.jpg) | ![Driver Analytics](linkedin-post/04-drivers.jpg) |
 
+| Build-a-race (what-if predictor) | Circuit Intelligence |
+| --- | --- |
+| ![Build a race](linkedin-post/09-build-a-race.jpg) | ![Circuit Intelligence](linkedin-post/06-circuits.jpg) |
+
 ## Tech stack
 
 | Layer | Technologies |

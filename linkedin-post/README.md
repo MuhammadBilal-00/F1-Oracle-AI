@@ -13,6 +13,7 @@ It turns 75 seasons of Grand Prix data (1950–2024) into something you can actu
 
 🎯 Race predictions — winner, podium, points & DNF, at **0.987 ROC AUC**
 🎲 A Monte Carlo race simulator — thousands of iterations with confidence intervals
+🏎️ Build-a-race mode — drop any drivers onto any circuit and predict the outcome
 🔬 A research lab — driver clustering (PCA/t-SNE), SHAP feature attribution, correlations
 📈 Deep driver, constructor & circuit analytics across 861 drivers and 77 circuits
 
