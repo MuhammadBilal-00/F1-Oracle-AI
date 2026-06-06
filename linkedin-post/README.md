@@ -24,7 +24,7 @@ Under the hood:
 The hardest — and most satisfying — part wasn't the modelling. It was the product: I rebuilt the entire UI from scratch so it feels calm and effortless, where every control maps to a real model capability.
 
 🔗 Code: https://github.com/MuhammadBilal-00/F1-Oracle-AI
-🔗 Live demo: <add your Vercel URL>
+🔗 Live demo: https://f1-oracle-ai.vercel.app
 
 What would you predict for the next race? 👇
 

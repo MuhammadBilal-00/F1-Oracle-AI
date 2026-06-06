@@ -12,6 +12,6 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      # After the Vercel frontend is live, set this to its URL (JSON array).
+      # Allowed browser origins (JSON array) — includes the live Vercel frontend.
       - key: CORS_ORIGINS
-        value: '["http://localhost:3000"]'
+        value: '["https://f1-oracle-ai.vercel.app","http://localhost:3000"]'

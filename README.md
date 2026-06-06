@@ -13,6 +13,8 @@ Predict race outcomes, run thousands of Monte Carlo simulations, and explore 75 
 [![Python](https://img.shields.io/badge/Python-3.11-3776ab?logo=python)](https://www.python.org)
 [![Tests](https://img.shields.io/badge/tests-26%20passing-34d399)](#testing)
 
+**[▶ Live demo](https://f1-oracle-ai.vercel.app)** · **[Repository](https://github.com/MuhammadBilal-00/F1-Oracle-AI)**
+
 </div>
 
 ---
