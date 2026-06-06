@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
-import { Dices, Play, Trophy, Activity, AlertTriangle, Loader2 } from "lucide-react";
+import { Dices, Play, Trophy, AlertTriangle, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

@@ -139,8 +139,11 @@ export default function DriversPage() {
   const [aId, setAId] = useState<string>("830");
   const [bId, setBId] = useState<string>("1");
 
+  // Sync the selected driver from the ?driver= query param after mount (client-only,
+  // so SSR markup stays stable and hydration matches before this update runs).
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("driver");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (q) setAId(q);
   }, []);
 

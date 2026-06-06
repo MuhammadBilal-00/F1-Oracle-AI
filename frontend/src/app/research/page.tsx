@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import {
   ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, BarChart, Bar, Cell,
 } from "recharts";
-import { FlaskConical } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -14,7 +13,7 @@ import { Insight } from "@/components/shared/insight";
 import { ChartBox } from "@/components/charts/chart-box";
 import { CHART, tooltipStyle, seriesColor } from "@/components/charts/theme";
 import { useClusters, useFeatureImportance } from "@/hooks/use-f1";
-import { pct, num } from "@/lib/format";
+import { num } from "@/lib/format";
 import type { DriverCluster, PredictionTarget } from "@/lib/types";
 
 const TARGETS: { value: PredictionTarget; label: string }[] = [

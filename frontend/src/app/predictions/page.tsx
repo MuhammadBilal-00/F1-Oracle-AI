@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
-import { Target, Trophy, AlertTriangle, Crown, Medal, Award } from "lucide-react";
+import { Target, AlertTriangle, Crown, Medal, Award } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Combobox, type ComboItem } from "@/components/ui/combobox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/shared/states";
@@ -16,7 +15,7 @@ import { DriverAvatar } from "@/components/shared/driver-avatar";
 import { ChartBox } from "@/components/charts/chart-box";
 import { CHART, tooltipStyle } from "@/components/charts/theme";
 import { useSeasons, useRaces, usePrediction, useRaceResults, useFeatureImportance, useDriverMap } from "@/hooks/use-f1";
-import { pct, num } from "@/lib/format";
+import { pct } from "@/lib/format";
 import type { PredictionTarget, DriverPrediction } from "@/lib/types";
 
 const TARGETS: { value: PredictionTarget; label: string }[] = [
@@ -50,24 +49,21 @@ export default function PredictionsPage() {
   const [raceId, setRaceId] = useState("");
   const [target, setTarget] = useState<PredictionTarget>("race_winner");
 
-  const { map } = useDriverMap();
-  const pred = usePrediction(raceId ? Number(raceId) : undefined);
-  const results = useRaceResults(raceId ? Number(raceId) : undefined);
-  const fi = useFeatureImportance(target);
+  // Default to the season's first race for instant feedback; user selection overrides.
+  const effectiveRaceId = raceId || (races?.length ? String(races[0].race_id) : "");
+  const rid = effectiveRaceId ? Number(effectiveRaceId) : undefined;
 
-  // Auto-select the first race of a season for instant feedback.
-  useEffect(() => {
-    if (races?.length && !races.some((r) => String(r.race_id) === raceId)) {
-      setRaceId(String(races[0].race_id));
-    }
-  }, [races]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { map } = useDriverMap();
+  const pred = usePrediction(rid);
+  const results = useRaceResults(rid);
+  const fi = useFeatureImportance(target);
 
   const raceOptions: ComboItem[] = useMemo(
     () => (races ?? []).map((r) => ({ value: String(r.race_id), label: r.name, sublabel: `R${r.round}`, keywords: [r.circuit_name, r.country] })),
     [races],
   );
 
-  const drivers = pred.data?.drivers ?? [];
+  const drivers = useMemo(() => pred.data?.drivers ?? [], [pred.data]);
   const name = (d: DriverPrediction) => map.get(d.driver_id)?.full_name ?? `#${d.driver_id}`;
   const podium = drivers.slice(0, 3);
 
@@ -105,14 +101,14 @@ export default function PredictionsPage() {
           <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
             <div className="space-y-1.5">
               <label className="eyebrow">Season</label>
-              <Select value={String(season)} onValueChange={(v) => setSeason(Number(v))}>
+              <Select value={String(season)} onValueChange={(v) => { setSeason(Number(v)); setRaceId(""); }}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>{(seasons ?? [season]).map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <label className="eyebrow">Grand Prix</label>
-              <Combobox items={raceOptions} value={raceId} onChange={setRaceId} placeholder="Select a race" searchPlaceholder="Search races…" />
+              <Combobox items={raceOptions} value={effectiveRaceId} onChange={setRaceId} placeholder="Select a race" searchPlaceholder="Search races…" />
             </div>
           </div>
         </CardContent>
@@ -120,7 +116,7 @@ export default function PredictionsPage() {
 
       {pred.isError ? (
         <ErrorState message="No prediction available for this race." />
-      ) : !raceId || pred.isLoading ? (
+      ) : !effectiveRaceId || pred.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}</div>
       ) : drivers.length === 0 ? (
         <EmptyState icon={Target} title="No prediction data" description="The model has no features for this race." />

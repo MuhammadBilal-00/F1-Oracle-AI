@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/states";
 import { DriverAvatar, driverColor } from "@/components/shared/driver-avatar";
 import { ChartBox } from "@/components/charts/chart-box";
-import { CHART, tooltipStyle } from "@/components/charts/theme";
+import { tooltipStyle } from "@/components/charts/theme";
 import { useSeasons, useDriverStandings, useConstructorStandings, useRivalries } from "@/hooks/use-f1";
 import { num, pct, flag } from "@/lib/format";
 import type { Standing } from "@/lib/types";
