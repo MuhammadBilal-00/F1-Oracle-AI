@@ -191,21 +191,33 @@ def build_driver_profiles_from_features(
         logger.warning(f"No data for race_id {race_id}")
         return []
 
+    # Race pace converges relative to single-lap qualifying pace, so compress
+    # qualifying gaps rather than applying them lap-for-lap.
+    PACE_COMPRESS = 0.6
+
+    def quali_pace(row) -> float:
+        """Best available weekend pace proxy: qualifying time, else clean race lap."""
+        v = row.get("best_quali_ms")
+        if pd.isna(v):
+            v = row.get("clean_avg_lap_ms")
+        if pd.isna(v):
+            v = 90_000.0
+        return float(v)
+
+    # Reference = fastest qualifier; everyone is paced relative to pole.
+    ref_pace = min((quali_pace(r) for _, r in race_data.iterrows()), default=90_000.0)
+
     profiles = []
-
     for _, row in race_data.iterrows():
-        # Base pace from clean lap average or qualifying time
-        base_pace = row.get("clean_avg_lap_ms", 90_000)
-        if pd.isna(base_pace):
-            base_pace = row.get("best_quali_ms", 90_000)
-        if pd.isna(base_pace):
-            base_pace = 90_000
+        # Per-lap pace anchored to actual weekend qualifying form (who was fast here).
+        base_pace = ref_pace + (quali_pace(row) - ref_pace) * PACE_COMPRESS
 
-        # Consistency → pace_std
+        # Consistency → realistic lap-to-lap std. Raw lap_cv (~0.03-0.06) includes
+        # safety-car/outlier laps; scale + clamp so genuine pace gaps aren't drowned.
         lap_cv = row.get("lap_cv", 0.02)
         if pd.isna(lap_cv):
             lap_cv = 0.02
-        pace_std = base_pace * lap_cv
+        pace_std = base_pace * float(np.clip(lap_cv * 0.12, 0.003, 0.006))
 
         # DNF probability from historical rate
         dnf_prob = row.get("dnf_rate", 0.1)
@@ -218,21 +230,22 @@ def build_driver_profiles_from_features(
             pit_dur = 25
         pit_dur_ms = float(pit_dur) * 1000
 
-        # Tire degradation from pace slope
+        # Tire degradation from pace slope (kept modest so it doesn't dominate)
         deg_slope = row.get("pace_degradation_slope", 100)
         if pd.isna(deg_slope):
             deg_slope = 100
+        deg_slope = float(np.clip(deg_slope, 0, 300))
 
         profiles.append(DriverProfile(
             driver_id=int(row["driver_id"]),
             name=str(row.get("full_name", f"Driver {row['driver_id']}")),
             base_pace=float(base_pace),
-            pace_std=float(max(pace_std, 500)),
+            pace_std=float(max(pace_std, 120)),
             dnf_prob=float(np.clip(dnf_prob, 0.01, 0.40)),
             pit_penalty_ms=float(pit_dur_ms),
             pit_std_ms=2000,
             grid_position=int(row.get("grid", 10)) if pd.notna(row.get("grid")) else 10,
-            tire_deg_rate=float(deg_slope),
+            tire_deg_rate=deg_slope,
         ))
 
     return profiles
