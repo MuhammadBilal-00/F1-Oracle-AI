@@ -85,6 +85,18 @@ class DataService:
         df = self._query("SELECT * FROM dim_constructors ORDER BY constructor_id LIMIT 300")
         return df.head(limit).replace({np.nan: None}).to_dict(orient="records")
 
+    def get_constructor_history(self, constructor_id: int) -> List[Dict]:
+        """Season-by-season final championship standing for a constructor."""
+        df = self._query(f"""
+            SELECT r.year, fcs.points, fcs.position, fcs.wins
+            FROM fact_constructor_standings fcs
+            JOIN dim_races r ON fcs.race_id = r.race_id
+            WHERE fcs.constructor_id = {constructor_id}
+            AND fcs.race_id IN (SELECT MAX(r2.race_id) FROM dim_races r2 GROUP BY r2.year)
+            ORDER BY r.year
+        """)
+        return df.replace({np.nan: None}).to_dict(orient="records")
+
     def get_constructor(self, constructor_id: int) -> Optional[Dict]:
         df = self._query(f"SELECT * FROM dim_constructors WHERE constructor_id = {constructor_id}")
         if len(df) == 0:
@@ -200,6 +212,21 @@ class DataService:
         circ = self._query("SELECT * FROM dim_circuits")
         feats = self._load_parquet("circuit_features")
         df = circ.merge(feats, on="circuit_id", how="left", suffixes=("", "_feat"))
+        return df.replace({np.nan: None}).to_dict(orient="records")
+
+    def get_circuit_winners(self, circuit_id: int, limit: int = 15) -> List[Dict]:
+        """Most recent race winners (P1) at a circuit."""
+        df = self._query(f"""
+            SELECT r.year, r.name AS race_name, d.driver_id, d.full_name AS winner,
+                   c.name AS constructor_name, fr.grid, fr.laps
+            FROM fact_race_results fr
+            JOIN dim_races r ON fr.race_id = r.race_id
+            JOIN dim_drivers d ON fr.driver_id = d.driver_id
+            JOIN dim_constructors c ON fr.constructor_id = c.constructor_id
+            WHERE r.circuit_id = {circuit_id} AND fr.position = 1
+            ORDER BY r.year DESC
+            LIMIT {limit}
+        """)
         return df.replace({np.nan: None}).to_dict(orient="records")
 
     # ─── Analytics ────────────────────────────────────────

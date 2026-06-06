@@ -18,6 +18,11 @@ def circuit_analytics():
     return data_service.get_circuits()
 
 
+@router.get("/circuits/{circuit_id}/winners")
+def circuit_winners(circuit_id: int, limit: int = Query(15, le=50)):
+    return data_service.get_circuit_winners(circuit_id, limit=limit)
+
+
 @router.get("/standings/drivers/{year}")
 def driver_standings(year: int, after_round: Optional[int] = None):
     return data_service.get_driver_standings(year, after_round=after_round)
@@ -41,3 +46,8 @@ def list_constructors():
 @router.get("/constructors/{constructor_id}")
 def get_constructor(constructor_id: int):
     return data_service.get_constructor(constructor_id)
+
+
+@router.get("/constructors/{constructor_id}/history")
+def constructor_history(constructor_id: int):
+    return data_service.get_constructor_history(constructor_id)
