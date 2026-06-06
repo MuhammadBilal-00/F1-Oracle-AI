@@ -33,8 +33,9 @@ class DataService:
             return pd.read_sql(sql, conn)
 
     # ─── Drivers ───────────────────────────────────────────
-    def get_drivers(self, limit: int = 100, search: Optional[str] = None) -> List[Dict]:
-        df = self._query("SELECT * FROM dim_drivers ORDER BY driver_id LIMIT 500")
+    def get_drivers(self, limit: int = 1000, search: Optional[str] = None) -> List[Dict]:
+        # Load the full roster, then filter — so modern drivers (high IDs) stay searchable.
+        df = self._query("SELECT * FROM dim_drivers ORDER BY surname, forename")
         if search:
             mask = df["full_name"].str.contains(search, case=False, na=False)
             df = df[mask]

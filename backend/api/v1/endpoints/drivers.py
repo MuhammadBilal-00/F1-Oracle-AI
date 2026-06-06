@@ -10,7 +10,7 @@ router = APIRouter(prefix="/drivers", tags=["Drivers"])
 @router.get("/")
 def list_drivers(
     search: Optional[str] = Query(None, description="Search by name"),
-    limit: int = Query(100, le=500),
+    limit: int = Query(1000, le=2000),
 ):
     return data_service.get_drivers(limit=limit, search=search)
 
