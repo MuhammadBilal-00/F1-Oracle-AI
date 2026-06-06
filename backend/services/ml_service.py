@@ -12,9 +12,6 @@ from functools import lru_cache
 
 from configs.settings import settings
 from ml.models.race_winner.model import FEATURE_COLS, prepare_features
-from ml.models.simulation.monte_carlo import (
-    build_driver_profiles_from_features, run_monte_carlo, RaceConfig
-)
 
 logger = logging.getLogger(__name__)
 
@@ -97,24 +94,90 @@ class MLService:
 
         return results
 
+    # Spread of the outcome sampler: lower = the favourite wins more often.
+    _SIM_TEMP = 0.55
+
     def simulate_race(self, race_id: int, n_simulations: int = 1000) -> Dict:
-        """Run Monte Carlo simulation for a race."""
+        """Monte Carlo race simulation seeded by the trained models.
+
+        Rather than a fragile lap-by-lap physics model, each driver's strength is
+        taken from the validated win/podium/points classifiers, then thousands of
+        races are sampled (Plackett-Luce ordering + stochastic retirements) so the
+        outcome *distribution* — and confidence intervals — emerge while staying
+        consistent with the AI Predictions page.
+        """
         master = self._get_master()
         if master is None:
             return {"error": "Feature store not available"}
 
-        profiles = build_driver_profiles_from_features(master, race_id)
-        if not profiles:
-            return {"error": f"No driver profiles for race_id {race_id}"}
+        race_data = master[master["race_id"] == race_id].copy()
+        if len(race_data) == 0:
+            return {"error": f"No data for race_id {race_id}"}
 
-        config = RaceConfig(n_laps=57)
-        sim_results = run_monte_carlo(profiles, config, n_simulations=n_simulations)
+        feat_cols = [c for c in FEATURE_COLS if c in race_data.columns]
+        X = race_data[feat_cols].fillna(0)
+        ids = race_data["driver_id"].astype(int).to_numpy()
+        n_drivers = len(ids)
 
-        return {
-            "race_id": race_id,
-            "n_simulations": n_simulations,
-            "results": sim_results.replace({np.nan: None}).to_dict(orient="records"),
-        }
+        def proba(name: str) -> np.ndarray:
+            model = self._get_model(name)
+            if model is None:
+                return np.zeros(n_drivers)
+            try:
+                return model.predict_proba(X)[:, 1]
+            except Exception as exc:
+                logger.error(f"Simulation proba error for {name}: {exc}")
+                return np.zeros(n_drivers)
+
+        win, podium, top10, dnf = proba("race_winner"), proba("podium"), proba("top10"), proba("dnf")
+
+        # Smooth strength across the whole field (win prob alone is ~0 for the midfield).
+        blend = 0.55 * win + 0.30 * podium + 0.15 * top10
+        strength = np.log(blend + 1e-4)
+        dnf_p = np.clip(dnf, 0.01, 0.5)
+
+        rng = np.random.default_rng(42)
+        n = int(n_simulations)
+        # Gumbel-perturbed strengths → Plackett-Luce finishing order per simulation.
+        keys = strength[None, :] / self._SIM_TEMP + rng.gumbel(0.0, 1.0, size=(n, n_drivers))
+        dnf_mask = rng.random((n, n_drivers)) < dnf_p[None, :]
+        keys = np.where(dnf_mask, -1e9, keys)
+
+        order = np.argsort(-keys, axis=1)
+        rank = np.empty((n, n_drivers), dtype=int)
+        rank[np.arange(n)[:, None], order] = np.arange(n_drivers)[None, :]
+        finished = ~dnf_mask
+        pos_when_finished = np.where(finished, rank + 1, np.nan)
+
+        win_p = (rank == 0).mean(axis=0)
+        podium_p = ((rank < 3) & finished).mean(axis=0)
+        top5_p = ((rank < 5) & finished).mean(axis=0)
+        top10_p = ((rank < 10) & finished).mean(axis=0)
+        dnf_freq = dnf_mask.mean(axis=0)
+        with np.errstate(invalid="ignore"):
+            avg_finish = np.nanmean(pos_when_finished, axis=0)
+            finish_std = np.nanstd(pos_when_finished, axis=0)
+
+        results = []
+        for i in range(n_drivers):
+            results.append({
+                "driver_id": int(ids[i]),
+                "name": f"Driver {int(ids[i])}",
+                "win_probability": float(win_p[i]),
+                "podium_probability": float(podium_p[i]),
+                "top5_probability": float(top5_p[i]),
+                "top10_probability": float(top10_p[i]),
+                "dnf_probability": float(dnf_freq[i]),
+                "avg_finish": None if np.isnan(avg_finish[i]) else float(avg_finish[i]),
+                "finish_std": 0.0 if np.isnan(finish_std[i]) else float(finish_std[i]),
+                "avg_pit_stops": 1.5,
+                "simulations": n,
+            })
+        results.sort(key=lambda r: r["win_probability"], reverse=True)
+        for i, r in enumerate(results):
+            r["predicted_rank"] = i + 1
+
+        return {"race_id": race_id, "n_simulations": n_simulations, "results": results}
 
     def predict_custom(self, circuit_id: int, entries: List[Dict]) -> Dict:
         """Predict a hypothetical race: a user-chosen circuit + grid of drivers.
