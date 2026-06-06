@@ -21,6 +21,8 @@ export const qk = {
   circuits: ["circuits"] as const,
   constructors: ["constructors"] as const,
   constructor: (id: number) => ["constructor", id] as const,
+  constructorHistory: (id: number) => ["constructor", id, "history"] as const,
+  circuitWinners: (id: number) => ["circuit", id, "winners"] as const,
   driverStandings: (y: number) => ["standings", "drivers", y] as const,
   constructorStandings: (y: number) => ["standings", "constructors", y] as const,
   rivalries: (n: number) => ["rivalries", n] as const,
@@ -55,6 +57,10 @@ export const useConstructors = () =>
   useQuery({ queryKey: qk.constructors, queryFn: () => api.constructors() });
 export const useConstructor = (id?: number) =>
   useQuery({ queryKey: qk.constructor(id!), queryFn: () => api.constructor(id!), enabled: !!id });
+export const useConstructorHistory = (id?: number) =>
+  useQuery({ queryKey: qk.constructorHistory(id!), queryFn: () => api.constructorHistory(id!), enabled: !!id });
+export const useCircuitWinners = (id?: number) =>
+  useQuery({ queryKey: qk.circuitWinners(id!), queryFn: () => api.circuitWinners(id!), enabled: !!id });
 export const useDriverStandings = (year: number) =>
   useQuery({ queryKey: qk.driverStandings(year), queryFn: () => api.driverStandings(year) });
 export const useConstructorStandings = (year: number) =>

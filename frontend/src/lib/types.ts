@@ -128,6 +128,23 @@ export interface Constructor extends ConstructorShort {
   performance?: ConstructorPerformance;
 }
 
+export interface ConstructorSeason {
+  year: number;
+  points: number | null;
+  position: number | null;
+  wins: number | null;
+}
+
+export interface CircuitWinner {
+  year: number;
+  race_name: string;
+  driver_id: number;
+  winner: string;
+  constructor_name: string;
+  grid: number | null;
+  laps: number | null;
+}
+
 export interface Race {
   race_id: number;
   year: number;

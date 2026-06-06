@@ -7,6 +7,7 @@ import type {
   Constructor, ConstructorShort, Race, RaceResult, Circuit,
   Rivalry, Standing, PredictionResult, SimulationResult,
   FeatureImportance, PredictionTarget, Overview,
+  ConstructorSeason, CircuitWinner,
 } from "./types";
 
 export const API_BASE =
@@ -54,7 +55,7 @@ function qs(params: Record<string, string | number | undefined>): string {
 export const api = {
   // ─── Drivers ──────────────────────────────────────────────
   drivers: (params?: { search?: string; limit?: number }) =>
-    request<Driver[]>(`/drivers/${qs({ search: params?.search, limit: params?.limit ?? 500 })}`),
+    request<Driver[]>(`/drivers/${qs({ search: params?.search, limit: params?.limit ?? 2000 })}`),
   driver: (id: number) => request<Driver>(`/drivers/${id}`),
   driverHistory: (id: number) => request<DriverHistoryEntry[]>(`/drivers/${id}/history`),
   goat: (topN = 50) => request<GoatEntry[]>(`/drivers/goat${qs({ top_n: topN })}`),
@@ -78,8 +79,12 @@ export const api = {
   // ─── Analytics ────────────────────────────────────────────
   overview: () => request<Overview>(`/analytics/overview`),
   circuits: () => request<Circuit[]>(`/analytics/circuits`),
+  circuitWinners: (id: number, limit = 15) =>
+    request<CircuitWinner[]>(`/analytics/circuits/${id}/winners${qs({ limit })}`),
   constructors: () => request<ConstructorShort[]>(`/analytics/constructors`),
   constructor: (id: number) => request<Constructor>(`/analytics/constructors/${id}`),
+  constructorHistory: (id: number) =>
+    request<ConstructorSeason[]>(`/analytics/constructors/${id}/history`),
   driverStandings: (year: number) => request<Standing[]>(`/analytics/standings/drivers/${year}`),
   constructorStandings: (year: number) =>
     request<Standing[]>(`/analytics/standings/constructors/${year}`),

@@ -11,6 +11,7 @@ export const CHART = {
   info: "#5b9bff",
   warning: "#f5b544",
   violet: "#9a7cff",
+  gold: "#f5c451",
   muted: "#71717a",
 } as const;
 

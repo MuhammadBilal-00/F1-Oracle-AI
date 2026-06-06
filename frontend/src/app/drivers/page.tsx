@@ -236,7 +236,7 @@ export default function DriversPage() {
                       <CartesianGrid vertical={false} />
                       <XAxis dataKey="year" tickLine={false} axisLine={false} />
                       <YAxis reversed domain={[1, "dataMax"]} tickLine={false} axisLine={false} width={42} />
-                      <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [num(v, 1), "Avg finish"]} />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(v) => [num(Number(v), 1), "Avg finish"]} />
                       <Line type="monotone" dataKey="avgFinish" stroke={CHART.info} strokeWidth={2} dot={{ r: 2.5 }} />
                     </LineChart>
                   </ChartBox>
