@@ -63,6 +63,18 @@ flowchart LR
 
 A deeper write-up lives in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Screenshots
+
+![Overview](linkedin-post/01-overview.jpg)
+
+| Race Simulator (Monte Carlo) | AI Predictions + SHAP |
+| --- | --- |
+| ![Race Simulator](linkedin-post/03-simulator.jpg) | ![AI Predictions](linkedin-post/02-predictions.jpg) |
+
+| Research Lab (PCA clustering) | Driver Analytics |
+| --- | --- |
+| ![Research Lab](linkedin-post/05-research.jpg) | ![Driver Analytics](linkedin-post/04-drivers.jpg) |
+
 ## Tech stack
 
 | Layer | Technologies |
