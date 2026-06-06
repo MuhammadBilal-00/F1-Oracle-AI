@@ -180,7 +180,11 @@ class MLService:
             ("top10", "top10_probability"), ("dnf", "dnf_probability"),
         ]:
             model = self._get_model(name)
-            probs[key] = model.predict_proba(X)[:, 1] if model else np.zeros(len(X))
+            try:
+                probs[key] = model.predict_proba(X)[:, 1] if model else np.zeros(len(X))
+            except Exception as exc:
+                logger.error(f"Custom prediction error for {name}: {exc}")
+                probs[key] = np.zeros(len(X))
 
         drivers = []
         for i, m in enumerate(meta):
