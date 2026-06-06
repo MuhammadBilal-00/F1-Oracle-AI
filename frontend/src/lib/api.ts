@@ -75,6 +75,11 @@ export const api = {
     request<{ target: string; features: FeatureImportance[] }>(
       `/predictions/feature-importance/${target}`,
     ),
+  predictCustom: (circuit_id: number, entries: { driver_id: number; grid: number }[]) =>
+    request<{ circuit_id: number; drivers: PredictionResult["drivers"] }>(`/predictions/custom`, {
+      method: "POST",
+      body: JSON.stringify({ circuit_id, entries }),
+    }),
 
   // ─── Analytics ────────────────────────────────────────────
   overview: () => request<Overview>(`/analytics/overview`),

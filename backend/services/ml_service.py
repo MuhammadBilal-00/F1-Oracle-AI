@@ -116,6 +116,87 @@ class MLService:
             "results": sim_results.replace({np.nan: None}).to_dict(orient="records"),
         }
 
+    def predict_custom(self, circuit_id: int, entries: List[Dict]) -> Dict:
+        """Predict a hypothetical race: a user-chosen circuit + grid of drivers.
+
+        Each driver's most recent feature row is used as their form baseline, then
+        the grid slot and the chosen circuit's characteristics (and the driver's
+        record at that circuit, if any) are overridden before inference.
+        """
+        master = self._get_master()
+        if master is None:
+            return {"error": "Feature store not available"}
+
+        circ_rows = master[master["circuit_id"] == circuit_id]
+        if len(circ_rows) == 0:
+            return {"error": f"No data for circuit_id {circuit_id}"}
+
+        circ_ref = circ_rows.sort_values(["year", "round"]).iloc[-1]
+        circuit_level = ["avg_dnf_rate", "overtake_index", "circuit_chaos_index", "avg_pit_stops_per_race"]
+        driver_circuit = ["circuit_win_rate", "circuit_avg_finish", "circuit_dnf_rate", "circuit_races", "track_specialization_score"]
+        available = [c for c in FEATURE_COLS if c in master.columns]
+
+        rows, meta = [], []
+        for e in entries:
+            d, grid = int(e["driver_id"]), int(e["grid"])
+            dm = master[master["driver_id"] == d]
+            if len(dm) == 0:
+                continue
+            base = dm.sort_values(["year", "round"]).iloc[-1].copy()
+
+            for c in circuit_level:
+                if c in master.columns:
+                    base[c] = circ_ref[c]
+
+            dcirc = dm[dm["circuit_id"] == circuit_id]
+            if len(dcirc):
+                cb = dcirc.sort_values(["year", "round"]).iloc[-1]
+                for c in driver_circuit:
+                    if c in master.columns:
+                        base[c] = cb[c]
+            else:
+                if "circuit_races" in master.columns:
+                    base["circuit_races"] = 0
+                if "circuit_win_rate" in master.columns:
+                    base["circuit_win_rate"] = 0.0
+
+            base["grid"] = grid
+            if "quali_position" in master.columns:
+                base["quali_position"] = grid
+            if "grid_x_ctor_reliability" in master.columns:
+                rel = base.get("ctor_reliability_score", np.nan)
+                base["grid_x_ctor_reliability"] = grid * (rel if pd.notna(rel) else 0.0)
+
+            rows.append(base[available])
+            meta.append({"driver_id": d, "grid": grid})
+
+        if not rows:
+            return {"error": "None of the selected drivers exist in the dataset"}
+
+        X = pd.DataFrame(rows)[available]
+        probs = {}
+        for name, key in [
+            ("race_winner", "win_probability"), ("podium", "podium_probability"),
+            ("top10", "top10_probability"), ("dnf", "dnf_probability"),
+        ]:
+            model = self._get_model(name)
+            probs[key] = model.predict_proba(X)[:, 1] if model else np.zeros(len(X))
+
+        drivers = []
+        for i, m in enumerate(meta):
+            drivers.append({
+                "driver_id": m["driver_id"],
+                "grid_position": m["grid"],
+                "win_probability": float(probs["win_probability"][i]),
+                "podium_probability": float(probs["podium_probability"][i]),
+                "top10_probability": float(probs["top10_probability"][i]),
+                "dnf_probability": float(probs["dnf_probability"][i]),
+            })
+        drivers.sort(key=lambda x: x["win_probability"], reverse=True)
+        for i, dd in enumerate(drivers):
+            dd["predicted_position"] = i + 1
+        return {"circuit_id": circuit_id, "drivers": drivers}
+
     def get_feature_importance(self, target: str = "race_winner") -> List[Dict]:
         """Get feature importance from the best model."""
         import shap

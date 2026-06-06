@@ -1,11 +1,21 @@
 """Prediction & simulation endpoints."""
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional
+from typing import List
 
 from backend.services.ml_service import ml_service
 
 router = APIRouter(prefix="/predictions", tags=["Predictions & AI"])
+
+
+class CustomEntry(BaseModel):
+    driver_id: int
+    grid: int
+
+
+class CustomRaceRequest(BaseModel):
+    circuit_id: int
+    entries: List[CustomEntry]
 
 
 @router.get("/race/{race_id}")
@@ -26,6 +36,17 @@ def simulate_race(
     result = ml_service.simulate_race(race_id, n_simulations=n_simulations)
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@router.post("/custom")
+def predict_custom_race(req: CustomRaceRequest):
+    """Predict a hypothetical race from a chosen circuit and a custom grid of drivers."""
+    if len(req.entries) < 2:
+        raise HTTPException(status_code=400, detail="Add at least two drivers to the grid")
+    result = ml_service.predict_custom(req.circuit_id, [e.model_dump() for e in req.entries])
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
     return result
 
 

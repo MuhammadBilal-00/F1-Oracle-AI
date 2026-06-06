@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { api } from "@/lib/api";
 import type { Driver, PredictionTarget } from "@/lib/types";
@@ -51,6 +51,11 @@ export const useSimulation = (id: number | undefined, n: number, enabled: boolea
   useQuery({ queryKey: qk.simulate(id!, n), queryFn: () => api.simulate(id!, n), enabled: enabled && !!id });
 export const useFeatureImportance = (target: PredictionTarget = "race_winner") =>
   useQuery({ queryKey: qk.featureImportance(target), queryFn: () => api.featureImportance(target) });
+export const usePredictCustom = () =>
+  useMutation({
+    mutationFn: (v: { circuitId: number; entries: { driver_id: number; grid: number }[] }) =>
+      api.predictCustom(v.circuitId, v.entries),
+  });
 
 export const useCircuits = () => useQuery({ queryKey: qk.circuits, queryFn: () => api.circuits() });
 export const useConstructors = () =>
