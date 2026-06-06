@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+/* ════════════════════════════════════════════════════════════════
+   F1 ORACLE AI — DESIGN SYSTEM
+   Restrained, premium, dark-first. Inspired by Linear / Stripe /
+   Bloomberg. Soft shadows, minimal borders, generous whitespace.
+════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Typography (wired to next/font CSS variables) ── */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, "SF Mono", monospace;
+
+  /* ── Surfaces ── */
+  --color-background: #08080a;
+  --color-surface: #101013;
+  --color-surface-2: #16161a;
+  --color-elevated: #1c1c21;
+  --color-overlay: #0c0c0f;
+
+  /* ── Borders ── */
+  --color-border: #ffffff14;        /* ~8% white */
+  --color-border-strong: #ffffff24; /* ~14% white */
+
+  /* ── Text ── */
+  --color-foreground: #fafafa;
+  --color-muted: #a1a1aa;
+  --color-subtle: #71717a;
+  --color-faint: #52525b;
+
+  /* ── Brand + semantic data colors ── */
+  --color-accent: #ff2e3f;          /* F1 red, refined */
+  --color-accent-soft: #ff2e3f1f;
+  --color-accent-foreground: #ffffff;
+  --color-positive: #34d399;
+  --color-negative: #fb7185;
+  --color-info: #5b9bff;
+  --color-warning: #f5b544;
+  --color-violet: #9a7cff;
+  --color-cyan: #46c6e0;
+  --color-gold: #f5c451;
+
+  /* ── Radius ── */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.5rem;
+
+  /* ── Soft elevation shadows ── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.30);
+  --shadow-md: 0 4px 20px -6px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 0.55);
+  --shadow-xl: 0 28px 70px -20px rgb(0 0 0 / 0.65);
+
+  /* ── Motion ── */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Base layer ─────────────────────────────────────────────── */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overflow-x: hidden;
+  }
+
+  /* Tabular figures everywhere numbers matter */
+  .tnum,
+  table,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+    color: #fff;
+  }
+
+  /* Minimal, premium scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff1f transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #ffffff14;
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #ffffff2e;
+    background-clip: content-box;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ── Reusable component primitives ───────────────────────────── */
+@layer components {
+  /* The single card surface used across the app. */
+  .surface {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+
+  /* Subtle top-light gradient for hero surfaces. */
+  .surface-hero {
+    background:
+      radial-gradient(120% 140% at 0% 0%, #ffffff0a 0%, transparent 42%),
+      var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+  }
+
+  /* Eyebrow / section label. */
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-subtle);
+  }
+}
+
+/* ── Animation utilities ─────────────────────────────────────── */
+@layer utilities {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, #ffffff08 1px, transparent 1px),
+      linear-gradient(to bottom, #ffffff08 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, #ffffff0f, transparent);
+    animation: shimmer 1.6s var(--ease-out-soft) infinite;
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .animate-pulse-soft {
+    animation: pulse-soft 2.4s ease-in-out infinite;
+  }
+}
+
+/* ── Recharts theming ────────────────────────────────────────── */
+.recharts-text,
+.recharts-cartesian-axis-tick-value {
+  fill: var(--color-faint) !important;
+  font-size: 11px !important;
+  font-family: var(--font-mono) !important;
+}
+.recharts-cartesian-grid line {
+  stroke: #ffffff0d !important;
+}
+.recharts-legend-item-text {
+  color: var(--color-muted) !important;
+  font-size: 12px !important;
+}
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+.recharts-default-tooltip {
+  background: var(--color-elevated) !important;
+  border: 1px solid var(--color-border-strong) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-lg);
+  padding: 10px 12px !important;
+}
+.recharts-active-dot {
+  filter: drop-shadow(0 0 6px currentColor);
+}
